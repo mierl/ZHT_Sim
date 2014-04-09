@@ -1,0 +1,35 @@
+simulation.endtime 10^15
+
+simulation.logtime 10^15
+
+simulation.experiments 1
+
+network.size 128
+protocol.tr UniformRandomTransport
+{
+	mindelay 7912
+	maxdelay 7912
+}
+
+protocol.peer PeerProtocol
+{
+	transport tr
+	numServer network.size
+	numOperation 500
+	idLength 120
+	numReplica 0
+}
+
+init.create NetInit
+{
+	protocol peer
+	numOperation 500
+	numReplica 0
+}
+
+control.workloadgene TrafficGene
+{
+	protocol peer
+	idLength 120
+	step simulation.endtime
+}
