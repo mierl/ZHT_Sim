@@ -3,13 +3,16 @@ simulation.endtime 10^15 # set a parameter endtime of class simulation to be 10^
 simulation.logtime 10^15
 
 simulation.experiments 1
-network.size 512
+network.size 2048
 
 num_replica 0
-opNum  1000 #define a variable to be 500
+opNum  100 	#define a variable to be 500
 
-keyLength 120 # it was named idLength
+keyLength 120 	# it was named idLength
 
+
+
+proxyRate 4 	# given n, the rate is 1/n, meanning data server : proxy server = n
 
 
 # =================================================================================
@@ -42,7 +45,7 @@ protocol.myTransportLayer UniformRandomTransport
 protocol.myPeer PeerProtocol
 {
 	transport myTransportLayer # defined in above : protocol.myTransportLayer
-	# transport is a parameter defined to be read from file in PeerProtocol, but what is tr?
+		# transport is a parameter defined to be read from file in PeerProtocol, but what is tr?
 	
 	numServer network.size # a parameter given to PeerProtocol constructor
 	numOperation opNum # opNum defined as above
