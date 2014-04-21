@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry including="peersim-1.0.5.jar" kind="src" path="src">
+	<classpathentry excluding="ZHTDFC/|ZHTDFC/" including="peersim-1.0.5.jar" kind="src" path="src">
 		<attributes>
 			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="/Users/tony/Dev/KVSSim/src"/>
 		</attributes>
 	</classpathentry>
 	<classpathentry including="peersim-1.0.5.jar" kind="src" path="peersim-1.0.5"/>
+	<classpathentry kind="src" path="src/ZHTDFC"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="peersim-1.0.5/peersim-1.0.5.jar" sourcepath="peersim-1.0.5/src/peersim/core"/>
+	<classpathentry kind="lib" path="peersim-1.0.5/djep-1.0.0.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

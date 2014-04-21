@@ -1,35 +1,78 @@
-simulation.endtime 10^15
+simulation.endtime 10^15 # set a parameter endtime of class simulation to be 10^15
 
 simulation.logtime 10^15
 
 simulation.experiments 1
+network.size 64
 
-network.size 128
-protocol.tr UniformRandomTransport
+num_replica 3
+opNum  500 #define a variable to be 500
+
+
+
+
+
+# =================================================================================
+# Looks like: UniformRandomTransport implement the interface protocol.tr
+# UniformRandomTransport is given by the PeerSim, it implement Transport which extend Protocol
+# UniformRandomTransport has 2 parameters, mindelay and maxdelay.
+
+# UniformRandomTransport implement Transport which extend Protocol, 
+# myTransportLayer is defined as a instance of UniformRandomTransport, 
+# and initialized here. It's been used below in PeerProtocol as a parameter
+protocol.myTransportLayer UniformRandomTransport
 {
 	mindelay 7912
 	maxdelay 7912
 }
 
-protocol.peer PeerProtocol
+
+
+
+
+
+
+# =================================================================================
+# protocol is fixed 1 of 3 names, peer is its string ID. 
+# PeerProtocol implements EDProtocol,
+# Note: the parameters names defined in below are not the ones used directly in java code,
+#	but just a string for java code to find them in the config file.
+           
+
+protocol.myPeer PeerProtocol
 {
-	transport tr
-	numServer network.size
-	numOperation 500
+	transport myTransportLayer # defined in above : protocol.myTransportLayer
+	# transport is a parameter defined to be read from file in PeerProtocol, but what is tr?
+	
+	numServer network.size # a parameter given to PeerProtocol constructor
+	numOperation opNum # opNum defined as above
 	idLength 120
-	numReplica 0
+	numReplica num_replica
 }
 
-init.create NetInit
+
+
+
+
+
+# =================================================================================
+# NetInit implements Control. Where is init.create??
+init.myNetInit NetInit
 {
-	protocol peer
-	numOperation 500
-	numReplica 0
+	protocol myPeer # = init.create.protocol
+	numOperation opNum # opNum defined as above
+	numReplica num_replica # not used
 }
 
-control.workloadgene TrafficGene
+
+
+
+
+
+# =================================================================================
+control.myWorkloadGenerator TrafficGene
 {
-	protocol peer
+	protocol myPeer
 	idLength 120
 	step simulation.endtime
 }

@@ -3,36 +3,39 @@ import java.util.*;
 import peersim.core.*;
 import peersim.config.Configuration;
 
-public class NetInit implements Control 
-{
+//Implement interface Control, define the initial state of network
+public class NetInit implements Control {
 	private static final String PAR_PROT = "protocol";
 	private static final String PAR_NUMOPERA = "numOperation";
-	
+
 	private int pid;
 	private int numOpera;
-	
-	public NetInit(String prefix)
-	{
+
+	// Constructor
+	public NetInit(String prefix) {
+		// PID is given by the PeerSim, so you only use it, not change it.
+		// It can be fount by the engine and by given a string name.
 		this.pid = Configuration.getPid(prefix + "." + PAR_PROT);
 		this.numOpera = Configuration.getInt(prefix + "." + PAR_NUMOPERA);
 	}
-	
-	public void dfcInit()
-	{
-		for (int i = 0;i < Network.size();i++)
-		{
-			Node node = (Node)Network.get(i);
-			PeerProtocol pp = (PeerProtocol)node.getProtocol(pid);
+
+	//
+	public void dfcInit() {
+		// Node stored in a "array" and can be find with get()
+		for (int i = 0; i < Network.size(); i++) {
+			Node node = (Node) Network.get(i);
+			PeerProtocol pp = (PeerProtocol) node.getProtocol(pid);
+			
+			// Assign each node's protocol an ID??? The line below should not do anything. 
+			//Then this function should not do anything.
 			pp.id = new BigInteger(Integer.toString(i));
 		}
 	}
-	
-	public void overallInit()
-	{
-		for (int i = 0;i < Network.size();i++)
-		{
-			Node node = (Node)Network.get(i);
-			PeerProtocol pp = (PeerProtocol)node.getProtocol(pid);
+
+	public void overallInit() {
+		for (int i = 0; i < Network.size(); i++) {
+			Node node = (Node) Network.get(i);
+			PeerProtocol pp = (PeerProtocol) node.getProtocol(pid);
 			pp.maxTime = 0;
 			pp.maxFwdTime = 0;
 			pp.hmData = new HashMap<String, String>();
@@ -45,11 +48,12 @@ public class NetInit implements Control
 			pp.clientThroughput = 0;
 		}
 	}
-	
-	public boolean execute()
-	{
-		dfcInit();
-		overallInit();
+
+	// This is the only method that need to be implemented from Control.
+	// Actually Control only has this one method.
+	public boolean execute() {
+		//dfcInit(); //Tony commet it off: not do anything.
+		overallInit(); //This is used.
 		Library.initLib(numOpera);
 		return false;
 	}
