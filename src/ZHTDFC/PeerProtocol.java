@@ -171,7 +171,7 @@ public class PeerProtocol implements EDProtocol {
 		numReqRecv++;
 		updateMaxFwdTime(Library.recvOverhead);
 		if (numReplica == 0 || opMsg.type == 0) {
-			ResClientMessage rcm = (ResClientMessage) actOperaMsgProcess(opMsg,
+			ResClientMessage rcm = (ResClientMessage) actOpMsgProcess(opMsg,
 					node);
 			procToFwd();
 			updateMaxFwdTime(Library.sendOverhead);
@@ -183,29 +183,29 @@ public class PeerProtocol implements EDProtocol {
 						opMsg.sender, par.pid);
 			}
 		} else {
-			actOperaMsgProcess(opMsg, node);
+			actOpMsgProcess(opMsg, node);
 		}
 	}
 
 	/* Do actual operation */
-	public Object actOperaMsgProcess(OperationMessage om, Node node) {
+	public Object actOpMsgProcess(OperationMessage opMsg, Node node) {
 		String value = null;
 		ResClientMessage rcm = null;
-		if (om.type == 0) {
-			value = hmData.get(om.key);
+		if (opMsg.type == 0) {
+			value = hmData.get(opMsg.key);
 		} else if (numReplica == 0) {
-			value = om.value;
-			hmData.put(om.key, om.value);
+			value = opMsg.value;
+			hmData.put(opMsg.key, opMsg.value);
 		}
 		fwdToProc();
 		updateMaxTime(Library.procTime);
-		if (numReplica > 0 && om.type != 0) {
+		if (numReplica > 0 && opMsg.type != 0) {
 			messCount++;
-			hmReplica.put(messCount, new ReplicaInfo(om, 0));
-			doReplica(node, om, 0, messCount, 0);
+			hmReplica.put(messCount, new ReplicaInfo(opMsg, 0));
+			doReplica(node, opMsg, 0, messCount, 0);
 			return null;
 		} else {
-			rcm = new ResClientMessage(om.taskId, om.type, om.key, value, true,
+			rcm = new ResClientMessage(opMsg.taskId, opMsg.type, opMsg.key, value, true,
 					true, 0);
 			return rcm;
 		}
@@ -213,7 +213,7 @@ public class PeerProtocol implements EDProtocol {
 
 	/* response to client message processing */
 	// Final result print out to the screen.
-	public void respondClientMsgProcess(Node node, ResClientMessage rcm) {
+	public void respondClientMsgProcess(Node node, ResClientMessage msg) {
 		numAllReqFinished++;
 		Library.numOperaFinished++;
 		if (numAllReqFinished < numOpera) {
@@ -233,26 +233,26 @@ public class PeerProtocol implements EDProtocol {
 	}
 
 	/* handle the replication message */
-	public void replicaMsgProcess(Node node, ReplicaMessage rm) {
+	public void replicaMsgProcess(Node node, ReplicaMessage msg) {
 		ResReplicaMessage rrm = null;
-		hmData.put(rm.key, rm.value);
-		rrm = new ResReplicaMessage(rm.messageId, true);
+		hmData.put(msg.key, msg.value);
+		rrm = new ResReplicaMessage(msg.messageId, true);
 		updateMaxFwdTime(Library.recvOverhead);
 		fwdToProc();
 		updateMaxTime(Library.procTime);
 		procToFwd();
 		updateMaxFwdTime(Library.sendOverhead);
-		EDSimulator.add(waitTimeCal(maxFwdTime), rrm, rm.sender, par.pid);
+		EDSimulator.add(waitTimeCal(maxFwdTime), rrm, msg.sender, par.pid);
 		numFwdMsg++;
 	}
 
 	/* handle the replication response message */
-	public void resReplicaMsgProcess(Node sender, ResReplicaMessage rrm) {
+	public void resReplicaMsgProcess(Node sender, ResReplicaMessage msg) {
 		updateMaxFwdTime(Library.recvOverhead);
-		ReplicaInfo ri = hmReplica.get(rrm.messageId);
+		ReplicaInfo ri = hmReplica.get(msg.messageId);
 		ri.numReplicaRecv++;
 		if (ri.numReplicaRecv != numReplica) {
-			doReplica(sender, ri.om, ri.numReplicaRecv, rrm.messageId, 0);
+			doReplica(sender, ri.om, ri.numReplicaRecv, msg.messageId, 0);
 		} else {
 			ResClientMessage rcm = new ResClientMessage(ri.om.taskId, 1,
 					ri.om.key, ri.om.value, true, true, 0);
