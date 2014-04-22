@@ -25,8 +25,8 @@ proxyRate 4 	# given n, the rate is 1/n, meanning data server : proxy server = n
 # and initialized here. It's been used below in PeerProtocol as a parameter
 protocol.myTransportLayer UniformRandomTransport
 {
-	mindelay 12000# 000000 #7912  no impact???
-	maxdelay 12000# 000000 #7912
+	mindelay 12# 000000 #7912  no impact???
+	maxdelay 12# 000000 #7912
 }
 
 

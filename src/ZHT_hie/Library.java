@@ -5,14 +5,14 @@ import peersim.core.Node;
 //This class include most of the global variables. The init method is also only fill those variables.
 
 public class Library {
-	public static long netSpeed;
-	public static long latency;
-	public static long messSize;
-	public static long commOverhead;
-	public static long sendOverhead;
-	public static long recvOverhead;
+	public static long netBandWidth;// b/s
+	public static long latency; //in us, network latency
+	public static long msgSize;
+	public static long commuOverhead; // single request latency 
+	public static long sendOverhead; //packing overhead
+	public static long recvOverhead;// unpacking
 
-	public static long procTime;
+	public static long procTime; //process a msg time
 
 	public static long numOperaFinished;
 	public static long numAllMessage;
@@ -21,17 +21,17 @@ public class Library {
 	public static long taskId;
 
 	public static void initLib(int numOpera) {
-		Library.netSpeed = 6800000000L;
-		Library.latency = 5L;
+		Library.netBandWidth = 6800000000L; // 6.8Gb/s for bgp
+		Library.latency = 5L; //in us
 		if (Network.size() >= 1) {
 			Library.latency = Library.latency
 					* (long) (Math.log10(Network.size()) / Math.log10(2))
 					* (long) (Math.sqrt(Network.size() / 1024) + 1.5);
 		}
-		Library.messSize = 134L;
-		Library.commOverhead = Library.messSize * 8L * 1000000L
-				/ Library.netSpeed + Library.latency;
-		System.out.println(Library.commOverhead);
+		Library.msgSize = 134L;
+		Library.commuOverhead = Library.msgSize * 8L * 1000000L
+				/ Library.netBandWidth + Library.latency;
+		System.out.println(Library.commuOverhead);
 		Library.sendOverhead = Library.recvOverhead = 3L;
 
 		Library.procTime = 400L;

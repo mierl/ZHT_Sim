@@ -116,6 +116,7 @@ public class PeerProtocol implements EDProtocol {
 
 	// System defined, Must implement this function, no change to function name
 	// and parameters. Logic body.
+	// node: 
 	public void processEvent(Node node, int pid, Object event) {
 
 		Library.numAllMessage++;// no much use
@@ -126,7 +127,7 @@ public class PeerProtocol implements EDProtocol {
 
 		} else if (event.getClass() == ResClientMessage.class) {
 			ResClientMessage msg = (ResClientMessage) event;
-			respondClientMsgProcess(node, msg);
+			respondClientMsgProcess(node, msg); //executed by client, node: client which recv ack
 
 		} else if (event.getClass() == ReplicaMessage.class) {
 			ReplicaMessage msg = (ReplicaMessage) event;
@@ -286,7 +287,7 @@ public class PeerProtocol implements EDProtocol {
 	}
 
 	public long waitTimeCal(long endTime) {
-		return endTime - CommonState.getTime() + Library.commOverhead;
+		return endTime - CommonState.getTime() + Library.commuOverhead;
 	}
 
 	public void updateMaxTime(long increment) {
@@ -326,7 +327,7 @@ public class PeerProtocol implements EDProtocol {
 		long time = wait;
 		int destId = hashServer(new BigInteger(key), numServer);
 		if (destId != sender.getIndex()) {
-			time += Library.sendOverhead + Library.commOverhead;
+			time += Library.sendOverhead + Library.commuOverhead;
 		}
 		createTask(sender, 0, wait);
 		msg.taskId = Library.taskId;
@@ -346,7 +347,7 @@ public class PeerProtocol implements EDProtocol {
 		long time = wait;
 		int destId = hashServer(new BigInteger(key), numServer);
 		if (destId != sender.getIndex()) {
-			time += Library.sendOverhead + Library.commOverhead;
+			time += Library.sendOverhead + Library.commuOverhead;
 		}
 		createTask(sender, 1, wait);
 		msg.taskId = Library.taskId;

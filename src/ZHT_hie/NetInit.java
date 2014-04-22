@@ -52,7 +52,7 @@ public class NetInit implements Control {
 	// This is the only method that need to be implemented from Control.
 	// Actually Control only has this one method.
 	public boolean execute() {
-		//dfcInit(); //Tony commet it off: not do anything.
+		dfcInit(); //Tony commet it off: not do anything.
 		overallInit(); //This is used.
 		Library.initLib(numOpera);
 		return false;
