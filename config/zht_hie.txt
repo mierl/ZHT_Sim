@@ -3,22 +3,28 @@ simulation.endtime 10^15 # set a parameter endtime of class simulation to be 10^
 simulation.logtime 10^15
 
 simulation.experiments 1
-network.size 2048
 
+#a 8
+#b 16
+
+network.size 16
+
+ProxyRate 16
 num_replica 0
-opNum  100 	#define a variable to be 500
+opNum  100	#define a variable to be 500
 
 keyLength 120 	# it was named idLength
 
+Branch 1 # 0 for regular imp, 1 for ZHT-H
 
 
-proxyRate 4 	# given n, the rate is 1/n, meanning data server : proxy server = n
 
 
 # =================================================================================
 # Looks like: UniformRandomTransport implement the interface protocol.tr
 # UniformRandomTransport is given by the PeerSim, it implement Transport which extend Protocol
 # UniformRandomTransport has 2 parameters, mindelay and maxdelay.
+
 
 # UniformRandomTransport implement Transport which extend Protocol, 
 # myTransportLayer is defined as a instance of UniformRandomTransport, 
@@ -28,10 +34,6 @@ protocol.myTransportLayer UniformRandomTransport
 	mindelay 12# 000000 #7912  no impact???
 	maxdelay 12# 000000 #7912
 }
-
-
-
-
 
 
 
@@ -51,10 +53,8 @@ protocol.myPeer PeerProtocol
 	numOperation opNum # opNum defined as above
 	idLength keyLength #key length
 	numReplica num_replica
+	proxyRate ProxyRate
 }
-
-
-
 
 
 
@@ -62,20 +62,27 @@ protocol.myPeer PeerProtocol
 # NetInit implements Control. Where is init.create??
 init.myNetInit NetInit
 {
+	netBandWidth 6800000000 #6800000000
+	latency 5 #5
+	msgSize 134
+	# commuOverhead 
+	sendOverhead 3 #3
+	recvOverhead 3 #3
+	procTime 400
 	protocol myPeer # = init.create.protocol
 	numOperation opNum # opNum defined as above
 	numReplica num_replica # not used
+	proxyRate ProxyRate 	# given n, the rate is 1/n, meanning data server : proxy server = n
+	branch Branch # 0 for regular imp, 1 for ZHT-H
 }
 
 
 
-
-
-
 # =================================================================================
-control.myWorkloadGenerator TrafficGene
+control.myWorkloadGenerator WorkloadGen #TrafficGene
 {
 	protocol myPeer
 	idLength keyLength
 	step simulation.endtime
+	branch Branch # 0 for regular imp, 1 for ZHT-H
 }

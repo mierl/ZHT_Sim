@@ -1,5 +1,4 @@
-public class Parameters 
-{
+public class Parameters {
 	public int pid;
 	public int tid;
 }
