@@ -1,0 +1,45 @@
+simulation.endtime 10^15
+
+simulation.logtime 10^15
+
+simulation.experiments 1
+
+network.size 2
+
+protocol.tr UniformRandomTransport
+{
+	mindelay 7912
+	maxdelay 7912
+}
+
+protocol.peer PeerProtocol
+{
+	transport tr
+	idLength 120
+}
+
+init.create NetInit
+{
+	protocol peer
+	netSpeed 6800000000
+	latency 5
+	msgSize 50
+	packOverhead 900
+	unpackOverhead 900
+	numClient 1
+	numServer 1
+	procTime 65
+	batchSize 1
+	timeThreshold 10000
+}
+
+control.workloadgene TrafficGene
+{
+	protocol peer
+	numReqPerClient 100000
+	startupFilePath /Users/tony/Dropbox/java_workspace_sync/PeerSimSimulators/KVSSim/startup/
+	reqArrivalInterval 70
+	localTransTime 1
+	policy BatchSize
+	step simulation.endtime
+}
