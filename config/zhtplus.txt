@@ -26,23 +26,24 @@ init.create NetInit
 	msgSize 20
 	packOverhead 900
 	unpackOverhead 900
-	numClient 2
+	 numClient 2
 	numServer 2
 	procTime 65
 	timeThreshold 10000
 	batchSize 10
+	sysOverhead 1000 #transfer cost, in us, default 1000
 }
 
 control.workloadgene TrafficGene
 {
 	protocol peer
-	numReqPerClient 10
+	numReqPerClient 100
 	startupFilePath /Users/tony/Dropbox/java_workspace_sync/PeerSimSimulators/peersim-1.0.5/startup/
 	reqArrivalInterval 70
 	localTransTime 1
 	step simulation.endtime
 	#batchSize 10
-	batchPolicy fixedSize # 1 fixedSize, 3 qosCombo, 4 priorityQueue1, 5 priorityQueue2
-	qosPattern 1 # 1, 2, 3, 4 
+	batchPolicy qosCombo # 1 fixedSize, 3 qosCombo, 4 priorityQueue1, 5 priorityQueue2
+	qosPattern 2 # 1, 2, 3, 4 
 
 }
