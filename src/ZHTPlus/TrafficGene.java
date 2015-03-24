@@ -13,8 +13,12 @@ public class TrafficGene implements Control {
 	private static final String PAR_STARTUPFILEPATH = "startupFilePath";
 	private static final String PAR_REQARRIVALINTERVAL = "reqArrivalInterval";
 	private static final String PAR_LOCALTRANSTIME = "localTransTime";
-	private static final String PAR_POLICY = "policy";
+	//private static final String PAR_POLICY = "policy";
 
+	private static final String PAR_BATCHING_POLICY = "batchPolicy";
+	private static final String PAR_QoS_PATTERN = "qosPattern";
+	//private static final String PAR_BATCHSIZE = "batchSize";
+	
 	private final int pid;
 	private final int numReqPerClient;
 	private final String startupFilePath;
@@ -27,7 +31,9 @@ public class TrafficGene implements Control {
 		startupFilePath = Configuration.getString(prefix + "." + PAR_STARTUPFILEPATH);
 		reqArrivalInterval = Configuration.getLong(prefix + "." + PAR_REQARRIVALINTERVAL);
 		localTransTime = Configuration.getLong(prefix + "." + PAR_LOCALTRANSTIME);
-		Library.policy = Configuration.getString(prefix + "." + PAR_POLICY);
+		Library.batchPolicy = Configuration.getString(prefix + "." + PAR_BATCHING_POLICY);
+		Library.qosPattern = Configuration.getInt(prefix + "." + PAR_QoS_PATTERN);
+		System.out.println("PAR_BATCHSIZE = " + Library.batchSize);
 	}
 
 	public boolean execute() {

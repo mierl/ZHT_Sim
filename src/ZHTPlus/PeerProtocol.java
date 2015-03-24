@@ -80,7 +80,7 @@ public class PeerProtocol implements EDProtocol {
 	public int numReqSubmitted;
 	public int batchSize;
 	public long timeThreshold;
-	public ArrayList<OperaMessage>[] batchStat;
+	public ArrayList<OperaMessage>[] batchVector;
 
 	/*
 	 * initialization read the parameters from the configuration file
@@ -143,7 +143,7 @@ public class PeerProtocol implements EDProtocol {
 					/ (double) (CommonState.getTime() + Library.recvOverhead)
 					* 1E6;
 			System.out.println("The throughput is: " + th);
-			System.out.println("Single node throughput is: " + th/(numClient));
+			//System.out.println("Single node throughput is : " + th/(numClient));
 			
 		}
 	}
@@ -164,7 +164,7 @@ public class PeerProtocol implements EDProtocol {
 					/ (double) (CommonState.getTime() + Library.recvOverhead)
 					* 1E6;
 			System.out.println("The throughput is: " + th + " on " + numServer + " nodes.");
-			System.out.println("Single node throughput is: " + th/(numClient));
+			System.out.println("Single node throughput is : " + th/(numClient));
 			Library.logServer(par.pid);
 			Library.logTask();
 		}
@@ -205,66 +205,105 @@ public class PeerProtocol implements EDProtocol {
 	public void batchSend(Node sender, int pid, long time, int destId, int size) {
 		time += localTransTime * (long)size;
 		for (int i = 0; i < size; i++) {
-			Library.taskHM.get(batchStat[destId].get(i).taskId).
+			Library.taskHM.get(batchVector[destId].get(i).taskId).
 				taskSentTime = CommonState.getTime() + time;
 		}
 		time += Library.sendOverhead + Library.msgSize * 8L * 1000000L * (long)size
 				/ Library.netSpeed + Library.latency;
 		BatchMessage bm = new BatchMessage();
 		bm.sender = sender;
-		bm.requests = new OperaMessage[batchStat[destId].size()];
-		batchStat[destId].toArray(bm.requests);
-		batchStat[destId].clear();
+		bm.requests = new OperaMessage[batchVector[destId].size()];
+		batchVector[destId].toArray(bm.requests);
+		batchVector[destId].clear();
 		EDSimulator.add(time, bm, Network.get(destId + numClient), pid);
 	}
 	
-	/* submit a get request */
-	public void doGet(Node sender, int pid, long wait) {
+//	/* submit a get request */
+//	public void doGet(Node sender, int pid, long wait) {
+//		BigInteger ranKey = new BigInteger(idLength, CommonState.r);
+//		String key = ranKey.toString();
+//		long qos =0;
+//		OperaMessage om = new OperaMessage(0, sender, 0, key, null, qos);
+//		createTask(sender, 0, wait);
+//		om.taskId = Library.taskId;
+//		long time = wait;
+//		int destId = hashServer(new BigInteger(key), numServer);
+//		batchVector[destId].add(om);
+//		if (Library.batchPolicy.equals("BatchSize") && batchVector[destId].size() == batchSize) {
+//			
+//			batchSend(sender, pid, time, destId, batchSize);
+//		} else { // other policies
+//			
+//		}
+//	}
+//
+//	/* submit a put request */
+//	public void doPut(Node sender, int pid, long wait) {
+//		BigInteger ranKey = new BigInteger(idLength, CommonState.r);
+//		String key = ranKey.toString();
+//		byte[] valueByte = new byte[134];
+//		CommonState.r.nextBytes(valueByte);
+//		String value = valueByte.toString();
+//		long qos =0;
+//		OperaMessage om = new OperaMessage(0, sender, 1, key, value, qos);
+//		createTask(sender, 1, wait);
+//		om.taskId = Library.taskId;
+//		long time = wait;
+//		int destId = hashServer(new BigInteger(key), numServer);
+//		batchVector[destId].add(om);
+//		if (Library.batchPolicy.equals("BatchSize") && batchVector[destId].size() == batchSize) {
+//			batchSend(sender, pid, time, destId, batchSize);
+//		} else { // other policies
+//			
+//		}
+//	}
+	
+	public void doBatchRequest(Node sender, int pid, long wait, int isPut){
+		//Generate 
 		BigInteger ranKey = new BigInteger(idLength, CommonState.r);
 		String key = ranKey.toString();
-		long qos =0;
-		OperaMessage om = new OperaMessage(0, sender, 0, key, null, qos);
-		createTask(sender, 0, wait);
-		om.taskId = Library.taskId;
-		long time = wait;
-		int destId = hashServer(new BigInteger(key), numServer);
-		batchStat[destId].add(om);
-		if (Library.policy.equals("BatchSize") && batchStat[destId].size() == batchSize) {
-			batchSend(sender, pid, time, destId, batchSize);
-		} else { // other policies
-			
+		String value;
+		if(1==isPut){
+			byte[] valueByte = new byte[20];
+			CommonState.r.nextBytes(valueByte);
+			value = valueByte.toString();
+		}else{
+			value = null;
 		}
-	}
-
-	/* submit a put request */
-	public void doPut(Node sender, int pid, long wait) {
-		BigInteger ranKey = new BigInteger(idLength, CommonState.r);
-		String key = ranKey.toString();
-		byte[] valueByte = new byte[134];
-		CommonState.r.nextBytes(valueByte);
-		String value = valueByte.toString();
+		
 		long qos =0;
-		OperaMessage om = new OperaMessage(0, sender, 1, key, value, qos);
+		
+		OperaMessage om = new OperaMessage(0, sender, isPut, key, value, qos);
 		createTask(sender, 1, wait);
 		om.taskId = Library.taskId;
 		long time = wait;
 		int destId = hashServer(new BigInteger(key), numServer);
-		batchStat[destId].add(om);
-		if (Library.policy.equals("BatchSize") && batchStat[destId].size() == batchSize) {
+		batchVector[destId].add(om);    //.equals("fixedSize")
+		
+		if (Library.batchPolicy.equals("fixedSize") && batchVector[destId].size() == batchSize) {
+			System.out.println("batchPolicy = " + Library.batchPolicy+ ", batchSize = " + batchSize);
 			batchSend(sender, pid, time, destId, batchSize);
 		} else { // other policies
-			
+			System.out.println("BatchPolicy = " + Library.batchPolicy + ", batchSize = " + batchSize);
 		}
-	}
 
+	}
+	
 	/* submit a request */
 	public void doRequest(Node sender, int pid, long wait) {
 		double ran = CommonState.r.nextDouble();
+		
+		
+		
 		if (ran >= 0.5) {
-			doGet(sender, pid, wait);
+			//doGet(sender, pid, wait);
+			doBatchRequest(sender, pid, wait, 0);
 		} else {
-			doPut(sender, pid, wait);
+			//doPut(sender, pid, wait);
+			doBatchRequest(sender, pid, wait, 1);
 		}
+		
+		
 		numReqSubmitted++;
 		if (numReqSubmitted < numOpera) {
 			String str = "submitTask";
@@ -272,8 +311,8 @@ public class PeerProtocol implements EDProtocol {
 			EDSimulator.add(time, str, sender, pid);
 		} else {
 			for (int i = 0; i < numServer; i++) {
-				if (batchStat[i].size() > 0) {
-					batchSend(sender, pid, wait, i, batchStat[i].size());
+				if (batchVector[i].size() > 0) {
+					batchSend(sender, pid, wait, i, batchVector[i].size());
 				}
 			}
 		}

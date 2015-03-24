@@ -23,8 +23,10 @@ public class Library {
 
 	public static long taskId;
 
-	public static String policy;
-
+	//public static String batchPolicy;
+	public static String batchPolicy;
+	public static int qosPattern;
+	public static int batchSize;
 	public static HashMap<Long, TaskDetail> taskHM;
 
 	public static void initLib() {

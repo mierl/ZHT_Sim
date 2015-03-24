@@ -15,20 +15,22 @@ public class NetInit implements Control {
 	private static final String PAR_NUMCLIENT = "numClient";
 	private static final String PAR_NUMSERVER = "numServer";
 	private static final String PAR_PROCTIME = "procTime";
-	private static final String PAR_BATCHSIZE = "batchSize";
-	private static final String PAR_TIMETHRESHOLD = "timeThreshold";
 
+	private static final String PAR_TIMETHRESHOLD = "timeThreshold";
+	
+	private static final String PAR_BATCHSIZE = "batchSize";
+	
 	private int pid;
 	private int numClient;
 	private int numServer;
-	private int batchSize;
+	//private int batchSize;
 	private long timeThreshold;
 
 	public NetInit(String prefix) {
 		this.pid = Configuration.getPid(prefix + "." + PAR_PROT);
 		this.numClient = Configuration.getInt(prefix + "." + PAR_NUMCLIENT);
 		this.numServer = Configuration.getInt(prefix + "." + PAR_NUMSERVER);
-		this.batchSize = Configuration.getInt(prefix + "." + PAR_BATCHSIZE);
+		
 		this.timeThreshold = Configuration.getLong(prefix + "." + PAR_TIMETHRESHOLD);
 		Library.netSpeed = Configuration.getLong(prefix + "." + PAR_NETSPEED);
 		Library.latency = Configuration.getLong(prefix + "." + PAR_LATENCY);
@@ -36,6 +38,10 @@ public class NetInit implements Control {
 		Library.sendOverhead = Configuration.getLong(prefix + "." + PAR_PACKOVERHEAD);
 		Library.recvOverhead = Configuration.getLong(prefix + "." + PAR_UNPACKOVERHEAD);
 		Library.procTime = Configuration.getLong(prefix + "." + PAR_PROCTIME);
+		
+		Library.batchSize = Configuration.getInt(prefix + "." + PAR_BATCHSIZE);
+		
+		System.out.println("netinit = " + Library.batchSize);
 		Library.initLib();
 	}
 
@@ -56,11 +62,13 @@ public class NetInit implements Control {
 			pp.localTransTime = 0L;
 			pp.clientThroughput = 0;
 			pp.numReqSubmitted = 0;
-			pp.batchSize = batchSize;
+			
+			pp.batchSize = Library.batchSize; //batchSize;
+			System.out.println("pp.batchSize = " + Library.batchSize);
 			pp.timeThreshold = timeThreshold;
-			pp.batchStat = new ArrayList[numServer];
+			pp.batchVector = new ArrayList[numServer];
 			for (int j = 0; j < numServer; j++)
-				pp.batchStat[j] = new ArrayList<OperaMessage>();
+				pp.batchVector[j] = new ArrayList<OperaMessage>();
 		}
 	}
 
