@@ -19,6 +19,7 @@ public class NetInit implements Control {
 	private static final String PAR_TIMETHRESHOLD = "timeThreshold";
 	
 	private static final String PAR_BATCHSIZE = "batchSize";
+	private static final String PAR_SYSOVERHEAD = "sysOverhead";
 	
 	private int pid;
 	private int numClient;
@@ -40,8 +41,8 @@ public class NetInit implements Control {
 		Library.procTime = Configuration.getLong(prefix + "." + PAR_PROCTIME);
 		
 		Library.batchSize = Configuration.getInt(prefix + "." + PAR_BATCHSIZE);
-		
-		System.out.println("netinit = " + Library.batchSize);
+		Library.sysOverhead = Configuration.getLong(prefix + "." + PAR_SYSOVERHEAD);
+		//System.out.println("netinit = " + Library.batchSize);
 		Library.initLib();
 	}
 
@@ -64,11 +65,16 @@ public class NetInit implements Control {
 			pp.numReqSubmitted = 0;
 			
 			pp.batchSize = Library.batchSize; //batchSize;
-			System.out.println("pp.batchSize = " + Library.batchSize);
+			//System.out.println("pp.batchSize = " + Library.batchSize);
 			pp.timeThreshold = timeThreshold;
 			pp.batchVector = new ArrayList[numServer];
-			for (int j = 0; j < numServer; j++)
+			pp.batchDeadline = new long[numServer];
+			
+			for (int j = 0; j < numServer; j++){
 				pp.batchVector[j] = new ArrayList<OperaMessage>();
+				pp.batchDeadline[j] = 10*CommonState.getTime(); //infinite time.
+			}
+			
 		}
 	}
 

@@ -62,11 +62,10 @@ public class PeerProtocol implements EDProtocol {
 	 * messCount: for distinguishing the messages in message routing
 	 */
 	public long msgCount;
-	
+
 	public long localTransTime;
 	/* Hash Map for storing the (key, value) data */
 	public HashMap<String, String> hmData;
-
 
 	/* Counters for statistics */
 	public long numReqRecv;
@@ -75,12 +74,21 @@ public class PeerProtocol implements EDProtocol {
 
 	public double throughput;
 	public double clientThroughput;
-	
+
 	public long reqArrivalInterval;
 	public int numReqSubmitted;
 	public int batchSize;
 	public long timeThreshold;
 	public ArrayList<OperaMessage>[] batchVector;
+	public long batchDeadline[];
+
+	public long[][] QOS_PATTERN={
+			{1, 10, 100, 1000},
+			{1, 10, 100, 1000, 10, 100, 1000, 10, 100, 1000, 10, 100, 1000, 10, 100, 1000, 10, 100, 1000, 10, 100, 1000, 10, 100, 1000},
+			{10, 100, 1000},
+			{100, 1000}
+			};
+	
 
 	/*
 	 * initialization read the parameters from the configuration file
@@ -94,19 +102,19 @@ public class PeerProtocol implements EDProtocol {
 
 	public Object operaMsgProcess(OperaMessage om, Node node) {
 		numReqRecv++;
-		ResClientMessage rcm = (ResClientMessage) actOperaMsgProcess(om,node);
+		ResClientMessage rcm = (ResClientMessage) actOperaMsgProcess(om, node);
 		return rcm;
-//		procToFwd();
-//			updateMaxFwdTime(Library.sendOverhead);
-//			if (node.getIndex() != om.sender.getIndex()) {
-//				EDSimulator.add(waitTimeCal(maxFwdTime), rcm, om.sender,
-//						par.pid);
-//			} else {
-//				EDSimulator.add(maxFwdTime - CommonState.getTime(), rcm,
-//						om.sender, par.pid);
-//			}
+		// procToFwd();
+		// updateMaxFwdTime(Library.sendOverhead);
+		// if (node.getIndex() != om.sender.getIndex()) {
+		// EDSimulator.add(waitTimeCal(maxFwdTime), rcm, om.sender,
+		// par.pid);
+		// } else {
+		// EDSimulator.add(maxFwdTime - CommonState.getTime(), rcm,
+		// om.sender, par.pid);
+		// }
 	}
-	
+
 	public void procBatchMsg(BatchMessage bm, Node node) {
 		updateMaxFwdTime(Library.recvOverhead);
 		for (int i = 0; i < bm.requests.length; i++) {
@@ -115,17 +123,19 @@ public class PeerProtocol implements EDProtocol {
 		BatchResClientMsg batchResClientMsg = new BatchResClientMsg();
 		batchResClientMsg.batchRetMsg = new ArrayList<ResClientMessage>();
 		for (int i = 0; i < bm.requests.length; i++) {
-			batchResClientMsg.batchRetMsg.add((
-					ResClientMessage)operaMsgProcess(bm.requests[i], node));
+			batchResClientMsg.batchRetMsg
+					.add((ResClientMessage) operaMsgProcess(bm.requests[i],
+							node));
 		}
 		procToFwd();
 		updateMaxFwdTime(Library.sendOverhead);
-		long time = maxFwdTime + Library.msgSize * 8L * 1000000L * (long)bm.requests.length
-				/ Library.netSpeed + Library.latency;
-		EDSimulator.add(time - CommonState.getTime(), 
-				batchResClientMsg, bm.requests[0].sender, par.pid);
+		long time = maxFwdTime + Library.msgSize * 8L * 1000000L
+				* (long) bm.requests.length / Library.netSpeed
+				+ Library.latency;
+		EDSimulator.add(time - CommonState.getTime(), batchResClientMsg,
+				bm.requests[0].sender, par.pid);
 	}
-	
+
 	/* response to client message processing */
 	public void resClientMsgProcess(Node node, ResClientMessage rcm) {
 		numAllReqFinished++;
@@ -143,33 +153,36 @@ public class PeerProtocol implements EDProtocol {
 					/ (double) (CommonState.getTime() + Library.recvOverhead)
 					* 1E6;
 			System.out.println("The throughput is: " + th);
-			//System.out.println("Single node throughput is : " + th/(numClient));
-			
+			// System.out.println("Single node throughput is : " +
+			// th/(numClient));
+
 		}
 	}
-	
+
 	public void procBatchRetMsg(BatchResClientMsg brm, Node node) {
 		numAllReqFinished += brm.batchRetMsg.size();
 		Library.numOperaFinished += brm.batchRetMsg.size();
 		for (int i = 0; i < brm.batchRetMsg.size(); i++)
-			Library.taskHM.get(brm.batchRetMsg.get(i).taskId).
-			taskBackClientTime = CommonState.getTime();
+			Library.taskHM.get(brm.batchRetMsg.get(i).taskId).taskBackClientTime = CommonState
+					.getTime();
 		if (numAllReqFinished == numOpera)
 			clientThroughput = (double) numOpera
-			/ (double) (CommonState.getTime() + Library.recvOverhead);
+					/ (double) (CommonState.getTime() + Library.recvOverhead);
 		if (Library.numOperaFinished == Library.numAllOpera) {
 			System.out.println("The simulation time is:"
 					+ (CommonState.getTime() + Library.recvOverhead));
 			double th = (double) (Library.numAllOpera)
 					/ (double) (CommonState.getTime() + Library.recvOverhead)
 					* 1E6;
-			System.out.println("The throughput is: " + th + " on " + numServer + " nodes.");
-			System.out.println("Single node throughput is : " + th/(numClient));
+			System.out.println("The throughput is: " + th + " on " + numServer
+					+ " nodes.");
+			System.out.println("Single node throughput is : " + th
+					/ (numClient));
 			Library.logServer(par.pid);
 			Library.logTask();
 		}
 	}
-	
+
 	public void processEvent(Node node, int pid, Object event) {
 		Library.numAllMessage++;
 		if (event.getClass() == BatchMessage.class) {
@@ -178,12 +191,12 @@ public class PeerProtocol implements EDProtocol {
 		} else if (event.getClass() == BatchResClientMsg.class) {
 			BatchResClientMsg brm = (BatchResClientMsg) event;
 			procBatchRetMsg(brm, node);
-//		} else if (event.getClass() == ReplicaMessage.class) {
-//			ReplicaMessage rm = (ReplicaMessage) event;
-//			replicaMsgProcess(node, rm);
-//		} else if (event.getClass() == ResReplicaMessage.class) {
-//			ResReplicaMessage rrm = (ResReplicaMessage) event;
-//			resReplicaMsgProcess(node, rrm);
+			// } else if (event.getClass() == ReplicaMessage.class) {
+			// ReplicaMessage rm = (ReplicaMessage) event;
+			// replicaMsgProcess(node, rm);
+			// } else if (event.getClass() == ResReplicaMessage.class) {
+			// ResReplicaMessage rrm = (ResReplicaMessage) event;
+			// resReplicaMsgProcess(node, rrm);
 		} else if (event.getClass() == String.class) {
 			doRequest(node, pid, 0);
 		}
@@ -197,19 +210,19 @@ public class PeerProtocol implements EDProtocol {
 	/* create the task description upon submitting for the purpose of logging */
 	public void createTask(Node sender, int type, long wait) {
 		Library.taskId++;
-		TaskDetail td = new TaskDetail(Library.taskId, id.intValue(), 
-				"no", "get", CommonState.getTime() + wait, 0, 0, 0, 0, 1);
+		TaskDetail td = new TaskDetail(Library.taskId, id.intValue(), "no",
+				"get", CommonState.getTime() + wait, 0, 0, 0, 0, 1);
 		Library.taskHM.put(Library.taskId, td);
 	}
-	
+
 	public void batchSend(Node sender, int pid, long time, int destId, int size) {
-		time += localTransTime * (long)size;
+		time += localTransTime * (long) size;
 		for (int i = 0; i < size; i++) {
-			Library.taskHM.get(batchVector[destId].get(i).taskId).
-				taskSentTime = CommonState.getTime() + time;
+			Library.taskHM.get(batchVector[destId].get(i).taskId).taskSentTime = CommonState
+					.getTime() + time;
 		}
-		time += Library.sendOverhead + Library.msgSize * 8L * 1000000L * (long)size
-				/ Library.netSpeed + Library.latency;
+		time += Library.sendOverhead + Library.msgSize * 8L * 1000000L
+				* (long) size / Library.netSpeed + Library.latency;
 		BatchMessage bm = new BatchMessage();
 		bm.sender = sender;
 		bm.requests = new OperaMessage[batchVector[destId].size()];
@@ -217,93 +230,118 @@ public class PeerProtocol implements EDProtocol {
 		batchVector[destId].clear();
 		EDSimulator.add(time, bm, Network.get(destId + numClient), pid);
 	}
-	
-//	/* submit a get request */
-//	public void doGet(Node sender, int pid, long wait) {
-//		BigInteger ranKey = new BigInteger(idLength, CommonState.r);
-//		String key = ranKey.toString();
-//		long qos =0;
-//		OperaMessage om = new OperaMessage(0, sender, 0, key, null, qos);
-//		createTask(sender, 0, wait);
-//		om.taskId = Library.taskId;
-//		long time = wait;
-//		int destId = hashServer(new BigInteger(key), numServer);
-//		batchVector[destId].add(om);
-//		if (Library.batchPolicy.equals("BatchSize") && batchVector[destId].size() == batchSize) {
-//			
-//			batchSend(sender, pid, time, destId, batchSize);
-//		} else { // other policies
-//			
-//		}
-//	}
-//
-//	/* submit a put request */
-//	public void doPut(Node sender, int pid, long wait) {
-//		BigInteger ranKey = new BigInteger(idLength, CommonState.r);
-//		String key = ranKey.toString();
-//		byte[] valueByte = new byte[134];
-//		CommonState.r.nextBytes(valueByte);
-//		String value = valueByte.toString();
-//		long qos =0;
-//		OperaMessage om = new OperaMessage(0, sender, 1, key, value, qos);
-//		createTask(sender, 1, wait);
-//		om.taskId = Library.taskId;
-//		long time = wait;
-//		int destId = hashServer(new BigInteger(key), numServer);
-//		batchVector[destId].add(om);
-//		if (Library.batchPolicy.equals("BatchSize") && batchVector[destId].size() == batchSize) {
-//			batchSend(sender, pid, time, destId, batchSize);
-//		} else { // other policies
-//			
-//		}
-//	}
-	
-	public void doBatchRequest(Node sender, int pid, long wait, int isPut){
-		//Generate 
+
+	// /* submit a get request */
+	// public void doGet(Node sender, int pid, long wait) {
+	// BigInteger ranKey = new BigInteger(idLength, CommonState.r);
+	// String key = ranKey.toString();
+	// long qos =0;
+	// OperaMessage om = new OperaMessage(0, sender, 0, key, null, qos);
+	// createTask(sender, 0, wait);
+	// om.taskId = Library.taskId;
+	// long time = wait;
+	// int destId = hashServer(new BigInteger(key), numServer);
+	// batchVector[destId].add(om);
+	// if (Library.batchPolicy.equals("BatchSize") && batchVector[destId].size()
+	// == batchSize) {
+	//
+	// batchSend(sender, pid, time, destId, batchSize);
+	// } else { // other policies
+	//
+	// }
+	// }
+	//
+	// /* submit a put request */
+	// public void doPut(Node sender, int pid, long wait) {
+	// BigInteger ranKey = new BigInteger(idLength, CommonState.r);
+	// String key = ranKey.toString();
+	// byte[] valueByte = new byte[134];
+	// CommonState.r.nextBytes(valueByte);
+	// String value = valueByte.toString();
+	// long qos =0;
+	// OperaMessage om = new OperaMessage(0, sender, 1, key, value, qos);
+	// createTask(sender, 1, wait);
+	// om.taskId = Library.taskId;
+	// long time = wait;
+	// int destId = hashServer(new BigInteger(key), numServer);
+	// batchVector[destId].add(om);
+	// if (Library.batchPolicy.equals("BatchSize") && batchVector[destId].size()
+	// == batchSize) {
+	// batchSend(sender, pid, time, destId, batchSize);
+	// } else { // other policies
+	//
+	// }
+	// }
+
+	public void doBatchRequest(Node sender, int pid, long wait, int isPut) {
+		// Generate
 		BigInteger ranKey = new BigInteger(idLength, CommonState.r);
 		String key = ranKey.toString();
 		String value;
-		if(1==isPut){
+		if (1 == isPut) {
 			byte[] valueByte = new byte[20];
 			CommonState.r.nextBytes(valueByte);
 			value = valueByte.toString();
-		}else{
+		} else {
 			value = null;
 		}
-		
-		long qos =0;
-		
-		OperaMessage om = new OperaMessage(0, sender, isPut, key, value, qos);
+
+		double ran = CommonState.r.nextDouble();
+		int mod = (QOS_PATTERN[Library.qosPattern - 1].length); 
+		long qos = QOS_PATTERN[Library.qosPattern - 1][(int)(ran*100) % mod];
+		//System.out.println("qos = " + qos+ ", ran = "+ran);
+		OperaMessage om = new OperaMessage(0, sender, isPut, key, value, qos*1000);
 		createTask(sender, 1, wait);
 		om.taskId = Library.taskId;
 		long time = wait;
 		int destId = hashServer(new BigInteger(key), numServer);
-		batchVector[destId].add(om);    //.equals("fixedSize")
-		
-		if (Library.batchPolicy.equals("fixedSize") && batchVector[destId].size() == batchSize) {
-			System.out.println("batchPolicy = " + Library.batchPolicy+ ", batchSize = " + batchSize);
-			batchSend(sender, pid, time, destId, batchSize);
-		} else { // other policies
-			System.out.println("BatchPolicy = " + Library.batchPolicy + ", batchSize = " + batchSize);
+		batchVector[destId].add(om); // .equals("fixedSize")
+
+		long reqDeadline = om.QoS + CommonState.getTime();
+		if (reqDeadline < batchDeadline[destId]) {
+			batchDeadline[destId] = reqDeadline;
+		}
+
+		if (Library.batchPolicy.equals("fixedSize")) {
+			if (batchVector[destId].size() >= batchSize) {
+				batchSend(sender, pid, time, destId, batchSize);
+			}
+			// System.out.println("batchPolicy = " + Library.batchPolicy+
+			// ", batchSize = " + batchSize);
+
+		} else if (Library.batchPolicy.equals("qosCombo")) { // other policies
+			if (batchDeadline[destId] <= Library.sysOverhead
+					+ CommonState.getTime()
+					&& batchVector[destId].size() >= batchSize) {
+				batchSend(sender, pid, time, destId, batchSize);
+				batchDeadline[destId] = 10 * CommonState.getTime();
+			} else {
+				// nothing
+			}
+		} else if (Library.batchPolicy.equals("priorityQueue1")) {
+
+		} else if (Library.batchPolicy.equals("priorityQueue2")) {
+
+		} else {
+			System.out.println("batchPolicy not set correctly? batchPolicy = "
+					+ Library.batchPolicy);
+			System.exit(1);
 		}
 
 	}
-	
+
 	/* submit a request */
 	public void doRequest(Node sender, int pid, long wait) {
 		double ran = CommonState.r.nextDouble();
-		
-		
-		
+
 		if (ran >= 0.5) {
-			//doGet(sender, pid, wait);
+			// doGet(sender, pid, wait);
 			doBatchRequest(sender, pid, wait, 0);
 		} else {
-			//doPut(sender, pid, wait);
+			// doPut(sender, pid, wait);
 			doBatchRequest(sender, pid, wait, 1);
 		}
-		
-		
+
 		numReqSubmitted++;
 		if (numReqSubmitted < numOpera) {
 			String str = "submitTask";
@@ -361,7 +399,6 @@ public class PeerProtocol implements EDProtocol {
 				.toString());
 	}
 
-
 	/* Do actual operation */
 	public Object actOperaMsgProcess(OperaMessage om, Node node) {
 		String value = null;
@@ -375,45 +412,45 @@ public class PeerProtocol implements EDProtocol {
 		fwdToProc();
 		updateMaxTime(Library.procTime);
 		Library.taskHM.get(om.taskId).taskEndTime = maxTime;
-		rcm = new ResClientMessage(om.taskId, om.type, om.key, value, true, true, 0);
+		rcm = new ResClientMessage(om.taskId, om.type, om.key, value, true,
+				true, 0);
 		return rcm;
 	}
 
-
 	/* handle the replication message */
-//	public void replicaMsgProcess(Node node, ReplicaMessage rm) {
-//		ResReplicaMessage rrm = null;
-//		hmData.put(rm.key, rm.value);
-//		rrm = new ResReplicaMessage(rm.messageId, true);
-//		updateMaxFwdTime(Library.recvOverhead);
-//		fwdToProc();
-//		updateMaxTime(Library.procTime);
-//		procToFwd();
-//		updateMaxFwdTime(Library.sendOverhead);
-//		EDSimulator.add(waitTimeCal(maxFwdTime), rrm, rm.sender, par.pid);
-//		numFwdMsg++;
-//	}
+	// public void replicaMsgProcess(Node node, ReplicaMessage rm) {
+	// ResReplicaMessage rrm = null;
+	// hmData.put(rm.key, rm.value);
+	// rrm = new ResReplicaMessage(rm.messageId, true);
+	// updateMaxFwdTime(Library.recvOverhead);
+	// fwdToProc();
+	// updateMaxTime(Library.procTime);
+	// procToFwd();
+	// updateMaxFwdTime(Library.sendOverhead);
+	// EDSimulator.add(waitTimeCal(maxFwdTime), rrm, rm.sender, par.pid);
+	// numFwdMsg++;
+	// }
 
 	/* handle the replication response message */
-//	public void resReplicaMsgProcess(Node sender, ResReplicaMessage rrm) {
-//		updateMaxFwdTime(Library.recvOverhead);
-//		ReplicaInfo ri = hmReplica.get(rrm.messageId);
-//		ri.numReplicaRecv++;
-//		if (ri.numReplicaRecv != numReplica) {
-//			doReplica(sender, ri.om, ri.numReplicaRecv, rrm.messageId, 0);
-//		} else {
-//			ResClientMessage rcm = new ResClientMessage(ri.om.taskId, 1,
-//					ri.om.key, ri.om.value, true, true, 0);
-//			hmData.put(ri.om.key, ri.om.value);
-//			updateMaxFwdTime(Library.sendOverhead);
-//			if (ri.om.sender.getIndex() != sender.getIndex()) {
-//				EDSimulator.add(waitTimeCal(maxFwdTime), rcm, ri.om.sender,
-//						par.pid);
-//			} else {
-//				EDSimulator.add(maxFwdTime - CommonState.getTime(), rcm,
-//						ri.om.sender, par.pid);
-//			}
-//			numFwdMsg++;
-//		}
-//	}
+	// public void resReplicaMsgProcess(Node sender, ResReplicaMessage rrm) {
+	// updateMaxFwdTime(Library.recvOverhead);
+	// ReplicaInfo ri = hmReplica.get(rrm.messageId);
+	// ri.numReplicaRecv++;
+	// if (ri.numReplicaRecv != numReplica) {
+	// doReplica(sender, ri.om, ri.numReplicaRecv, rrm.messageId, 0);
+	// } else {
+	// ResClientMessage rcm = new ResClientMessage(ri.om.taskId, 1,
+	// ri.om.key, ri.om.value, true, true, 0);
+	// hmData.put(ri.om.key, ri.om.value);
+	// updateMaxFwdTime(Library.sendOverhead);
+	// if (ri.om.sender.getIndex() != sender.getIndex()) {
+	// EDSimulator.add(waitTimeCal(maxFwdTime), rcm, ri.om.sender,
+	// par.pid);
+	// } else {
+	// EDSimulator.add(maxFwdTime - CommonState.getTime(), rcm,
+	// ri.om.sender, par.pid);
+	// }
+	// numFwdMsg++;
+	// }
+	// }
 }

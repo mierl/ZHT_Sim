@@ -27,6 +27,7 @@ public class Library {
 	public static String batchPolicy;
 	public static int qosPattern;
 	public static int batchSize;
+	public static long sysOverhead;
 	public static HashMap<Long, TaskDetail> taskHM;
 
 	public static void initLib() {
